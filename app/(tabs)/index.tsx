@@ -1,6 +1,6 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Picker } from '@react-native-picker/picker';
-// eslint-disable-next-line import/no-named-as-default
+
 import Checkbox from 'expo-checkbox';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -30,10 +30,27 @@ interface FormValues {
   accept: boolean;
 }
 
+
+const SPECIES_OPTIONS = [
+  { label: '(cualquiera)', value: '' },
+  { label: 'Human', value: 'Human' },
+  { label: 'Alien', value: 'Alien' },
+  { label: 'Humanoid', value: 'Humanoid' },
+  { label: 'Robot', value: 'Robot' },
+  { label: 'Animal', value: 'Animal' },
+  { label: 'Mythological Creature', value: 'Mythological Creature' },
+  { label: 'Cronenberg', value: 'Cronenberg' },
+  { label: 'Disease', value: 'Disease' },
+  { label: 'Poopybutthole', value: 'Poopybutthole' },
+] as const;
+
 const schema: Yup.ObjectSchema<FormValues> = Yup.object({
   name: Yup.string().max(30, 'Máx 30 caracteres').default(''),
   email: Yup.string().email('Correo inválido').required('Requerido').default(''),
-  species: Yup.string().max(30, 'Máx 30 caracteres').default(''),
+
+  species: Yup.mixed<string>()
+    .oneOf(SPECIES_OPTIONS.map(o => o.value), 'Especie inválida')
+    .default(''),
   status: Yup.mixed<StatusValue>()
     .oneOf(['', 'alive', 'dead', 'unknown'], 'Estado inválido')
     .default(''),
@@ -149,20 +166,24 @@ export default function IndexScreen() {
               {errors.name && <Text style={styles.error}>{errors.name.message}</Text>}
 
               <Text style={[styles.label, { marginTop: 12 }]}>Especie</Text>
-              <Controller
-                control={control}
-                name="species"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    placeholder="Human, Alien..."
-                    placeholderTextColor="#64748b"
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                    style={styles.input}
-                  />
-                )}
-              />
+              <View style={styles.pickerWrap}>
+                <Controller
+                  control={control}
+                  name="species"
+                  render={({ field: { onChange, value } }) => (
+                    <Picker
+                      selectedValue={value}
+                      onValueChange={(v) => onChange(v)}
+                      dropdownIconColor="#94a3b8"
+                      style={{ color: 'white' }}
+                    >
+                      {SPECIES_OPTIONS.map(opt => (
+                        <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
+                      ))}
+                    </Picker>
+                  )}
+                />
+              </View>
               {errors.species && <Text style={styles.error}>{errors.species.message}</Text>}
 
               <Text style={[styles.label, { marginTop: 12 }]}>Estado</Text>
@@ -269,4 +290,3 @@ const styles = StyleSheet.create({
   },
   btnText: { color: 'white', fontWeight: '700' },
 });
-
